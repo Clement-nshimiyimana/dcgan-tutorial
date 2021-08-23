@@ -42,4 +42,6 @@ args = argparse.Namespace(
     # Number of GPUs available. Use 0 for CPU mode.
     ngpu = 1,
     
+    ckpt_path = "checkpoints"
+    
 )

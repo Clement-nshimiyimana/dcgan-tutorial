@@ -2,8 +2,10 @@
 import torch
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
-
-from .config import args
+try:
+    from .config import args
+except ModuleNotFoundError:
+    from config import args
 
 # We can use an image folder dataset the way we have it setup.
 # Create the dataset

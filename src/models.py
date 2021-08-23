@@ -1,6 +1,9 @@
 import torch.nn as nn
 
-from .config import args
+try:
+    from .config import args
+except ModuleNotFoundError:
+    from config import args
 
 # Generator Code
 
