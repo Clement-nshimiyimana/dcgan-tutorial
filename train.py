@@ -11,57 +11,59 @@ from src.utils import train_dcgan
 from src.dataset import dataloader
 
 
-# Decide which device we want to run on
-device = torch.device("cuda:0" if (torch.cuda.is_available() and args.ngpu > 0) else "cpu")
+def main(args):
+    # Decide which device we want to run on
+    device = torch.device("cuda:0" if (torch.cuda.is_available() and args.ngpu > 0) else "cpu")
 
 
-# Create the generator
-netG = Generator(args.ngpu).to(device)
+    # Create the generator
+    netG = Generator(args.ngpu).to(device)
 
-# Handle multi-gpu if desired
-if (device.type == 'cuda') and (args.ngpu > 1):
-    netG = nn.DataParallel(netG, list(range(args.ngpu)))
+    # Handle multi-gpu if desired
+    if (device.type == 'cuda') and (args.ngpu > 1):
+        netG = nn.DataParallel(netG, list(range(args.ngpu)))
 
-# Apply the weights_init function to randomly initialize all weights
-#  to mean=0, stdev=0.2.
-netG.apply(weights_init)
+    # Apply the weights_init function to randomly initialize all weights
+    #  to mean=0, stdev=0.2.
+    netG.apply(weights_init)
 
-# Print the model
-print(netG)
-
-
-# Create the Discriminator
-netD = Discriminator(args.ngpu).to(device)
-
-# Handle multi-gpu if desired
-if (device.type == 'cuda') and (args.ngpu > 1):
-    netD = nn.DataParallel(netD, list(range(args.ngpu)))
-
-# Apply the weights_init function to randomly initialize all weights
-#  to mean=0, stdev=0.2.
-netD.apply(weights_init)
-
-# Print the model
-print(netD)
+    # Print the model
+    print(netG)
 
 
-# Initialize BCELoss function
-criterion = nn.BCELoss()
+    # Create the Discriminator
+    netD = Discriminator(args.ngpu).to(device)
 
-# Create batch of latent vectors that we will use to visualize
-#  the progression of the generator
-fixed_noise = torch.randn(64, args.nz, 1, 1, device=device)
+    # Handle multi-gpu if desired
+    if (device.type == 'cuda') and (args.ngpu > 1):
+        netD = nn.DataParallel(netD, list(range(args.ngpu)))
 
-# Establish convention for real and fake labels during training
-real_label = 1.
-fake_label = 0.
+    # Apply the weights_init function to randomly initialize all weights
+    #  to mean=0, stdev=0.2.
+    netD.apply(weights_init)
 
-# Setup Adam optimizers for both G and D
-optimizerD = optim.Adam(netD.parameters(), lr=args.lr, betas=(args.beta1, 0.999))
-optimizerG = optim.Adam(netG.parameters(), lr=args.lr, betas=(args.beta1, 0.999))
+    # Print the model
+    print(netD)
 
+
+    # Initialize BCELoss function
+    criterion = nn.BCELoss()
+
+    # Create batch of latent vectors that we will use to visualize
+    #  the progression of the generator
+    fixed_noise = torch.randn(64, args.nz, 1, 1, device=device)
+
+    # Establish convention for real and fake labels during training
+    real_label = 1.
+    fake_label = 0.
+
+    # Setup Adam optimizers for both G and D
+    optimizerD = optim.Adam(netD.parameters(), lr=args.lr, betas=(args.beta1, 0.999))
+    optimizerG = optim.Adam(netG.parameters(), lr=args.lr, betas=(args.beta1, 0.999))
+
+    train_dcgan(netD, netG, criterion, optimizerD, optimizerG, dataloader, 
+          args.num_epochs, device, real_label, fake_label, fixed_noise, args.nz)
 
 
 if __name__ == "__main__":
-    train_dcgan(netD, netG, criterion, optimizerD, optimizerG, dataloader, 
-          args.num_epochs, device, real_label, fake_label, fixed_noise, args.nz)
+    main(args)
